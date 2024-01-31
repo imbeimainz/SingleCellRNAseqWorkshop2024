@@ -103,13 +103,14 @@ thead, tfoot, tr:nth-child(even) { background: #eee }
 
 @page { margin: 0; }
 
+/*
 .title-slide {
-  background-image: url('../images/funding.png'); /* if I want to put a logo */
+  background-image: url('../images/funding.png');
   background-position: 50% 98%;
   background-size: 600px;
   background-color: #FFFFFF;
 }
-
+*/
 
 .title-slide h1 {
   text-shadow: none;
