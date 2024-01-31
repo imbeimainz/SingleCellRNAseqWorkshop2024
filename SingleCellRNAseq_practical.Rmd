@@ -35,8 +35,8 @@ knitr::opts_chunk$set(
   error = FALSE,
   warning = FALSE,
   message = FALSE,
-  fig.width = 8, 
-  fig.height = 6, 
+  fig.width = 8,
+  fig.height = 6,
   eval = TRUE
 )
 
@@ -93,28 +93,28 @@ I wrote this tiny function for you, let's see what this does
 ```{r readrhapsody}
 read_BDrhapsody <- function(filename, sample_id, cond_id, batch_id) {
   message(filename)
-  
+
   sample_counts <- vroom::vroom(filename, delim = ",", comment = "#", guess_max = 15)
-  
+
   cell_indices <- sample_counts$Cell_Index
   features_ids <- colnames(sample_counts)[-1]
-  
+
   counts_matrix <- as(t(sample_counts[, -1]), "dgCMatrix")
   colnames(counts_matrix) <- as.character(cell_indices)
   rownames(counts_matrix) <- features_ids
-  
+
   sce <- SingleCellExperiment(
     assay = SimpleList(
       counts = counts_matrix
     )
   )
-  
+
   # something to keep the analysis meta-info
   sce$condition <- cond_id
   sce$sample_id <- sample_id
   sce$batch_id <- batch_id
   sce$run_id <- batch_id
-  
+
   return(sce)
 }
 ```
@@ -124,20 +124,25 @@ read_BDrhapsody <- function(filename, sample_id, cond_id, batch_id) {
 
 ```{r readin-round1}
 sce_ctrl_r1 <- read_BDrhapsody(
-  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag01_mm_Control_1_RSEC_MolsPerCell.csv", 
-  sample_id = "ctrl_r1", cond_id = "ctrl", batch_id = "batch1")
+  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag01_mm_Control_1_RSEC_MolsPerCell.csv",
+  sample_id = "ctrl_r1", cond_id = "ctrl", batch_id = "batch1"
+)
 sce_ctrl_r2 <- read_BDrhapsody(
-  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag02_mm_Control_2_RSEC_MolsPerCell.csv", 
-  sample_id = "ctrl_r2", cond_id = "ctrl", batch_id = "batch1")
+  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag02_mm_Control_2_RSEC_MolsPerCell.csv",
+  sample_id = "ctrl_r2", cond_id = "ctrl", batch_id = "batch1"
+)
 sce_ctrl_r3 <- read_BDrhapsody(
-  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag03_mm_Control_3_RSEC_MolsPerCell.csv", 
-  sample_id = "ctrl_r3", cond_id = "ctrl", batch_id = "batch1")
+  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag03_mm_Control_3_RSEC_MolsPerCell.csv",
+  sample_id = "ctrl_r3", cond_id = "ctrl", batch_id = "batch1"
+)
 sce_immu_r1 <- read_BDrhapsody(
-  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag04_mm_Treatment_1_RSEC_MolsPerCell.csv", 
-  sample_id = "immu_r1", cond_id = "immu", batch_id = "batch1")
+  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag04_mm_Treatment_1_RSEC_MolsPerCell.csv",
+  sample_id = "immu_r1", cond_id = "immu", batch_id = "batch1"
+)
 sce_immu_r2 <- read_BDrhapsody(
-  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag05_mm_Treatment_2_RSEC_MolsPerCell.csv", 
-  sample_id = "immu_r2", cond_id = "immu", batch_id = "batch1")
+  "dataset_bartneck/bartneck_et_al_raw/JB_4_6_SampleTag05_mm_Treatment_2_RSEC_MolsPerCell.csv",
+  sample_id = "immu_r2", cond_id = "immu", batch_id = "batch1"
+)
 
 sce_ctrl_r1$condition
 sce_ctrl_r1$sample_id
@@ -252,9 +257,10 @@ all_samples_ids <- c(
 
 sce_list_all <- lapply(1:11, function(arg) {
   sce <- read_BDrhapsody(all_molspercell_files[arg],
-                         sample_id = all_samples_ids[arg],
-                         cond_id = all_conditions[arg],
-                         batch_id = all_batches[arg])
+    sample_id = all_samples_ids[arg],
+    cond_id = all_conditions[arg],
+    batch_id = all_batches[arg]
+  )
 })
 
 names(sce_list_all) <- all_samples_ids
@@ -328,7 +334,7 @@ In the manuscript, we used a previous version of the Ensembl annotation EnsDb pa
 
 ```{r getv102}
 ens.mm.v102 <- ah[["AH89211"]]
-genes(ens.mm.v102)[,2]
+genes(ens.mm.v102)[, 2]
 ```
 
 We wanted to know which genes are coming from the mitochondria
@@ -336,9 +342,11 @@ We wanted to know which genes are coming from the mitochondria
 ```{r mitogenes}
 is.mito <- grepl("^mt-", rownames(sce))
 
-chr.loc <- mapIds(ens.mm.v102, keys=rownames(sce),
-                  keytype="GENENAME", column="SEQNAME")
-is.mito <- which(chr.loc=="MT")
+chr.loc <- mapIds(ens.mm.v102,
+  keys = rownames(sce),
+  keytype = "GENENAME", column = "SEQNAME"
+)
+is.mito <- which(chr.loc == "MT")
 is.mito
 ```
 
@@ -372,8 +380,8 @@ sce <- addPerFeatureQC(sce)
 
 rowData(sce)
 
-sce <- addPerCellQC(sce, subsets=list(Mito=is.mito))
-qcstats <- perCellQCMetrics(sce, subsets=list(Mito=is.mito))
+sce <- addPerCellQC(sce, subsets = list(Mito = is.mito))
+qcstats <- perCellQCMetrics(sce, subsets = list(Mito = is.mito))
 ```
 
 This adds a number of columns to the `rowData` and `colData` slots of the
@@ -428,7 +436,7 @@ absolute deviations (MAD) from the median across cells, in the direction
 indicating low quality. 
 
 ```{r discardqc}
-filtered <- quickPerCellQC(qcstats, percent_subsets="subsets_Mito_percent")
+filtered <- quickPerCellQC(qcstats, percent_subsets = "subsets_Mito_percent")
 filtered
 colSums(as.data.frame(filtered))
 table(filtered$low_n_features, filtered$high_subsets_Mito_percent)
@@ -439,11 +447,11 @@ sce$discard <- filtered$discard
 It is often very useful to look at this in a multivariate approach:
 
 ```{r qcplots}
-plotColData(sce, y="subsets_Mito_percent", colour_by="discard")
-plotColData(sce, y="sum", colour_by="discard")
-plotColData(sce, y="detected", colour_by="discard")
-plotColData(sce, x="sum", y="subsets_Mito_percent", colour_by="discard")
-plotColData(sce, x="detected", y="subsets_Mito_percent", colour_by="discard")
+plotColData(sce, y = "subsets_Mito_percent", colour_by = "discard")
+plotColData(sce, y = "sum", colour_by = "discard")
+plotColData(sce, y = "detected", colour_by = "discard")
+plotColData(sce, x = "sum", y = "subsets_Mito_percent", colour_by = "discard")
+plotColData(sce, x = "detected", y = "subsets_Mito_percent", colour_by = "discard")
 ```
 
 We filter out the cells identified as being of low quality according to the 
@@ -477,7 +485,7 @@ in `sce`, named `logcounts`.
 
 ```{r norma-logcounts}
 clusters <- scran::quickCluster(sce)
-sce <- scran::computeSumFactors(sce, clusters=clusters)
+sce <- scran::computeSumFactors(sce, clusters = clusters)
 sce <- scater::logNormCounts(sce)
 ```
 
@@ -534,7 +542,7 @@ detected genes.
 
 ```{r runpca}
 set.seed(42)
-sce <- scater::runPCA(sce, subset_row=hvgs)
+sce <- scater::runPCA(sce, subset_row = hvgs)
 
 clusters <- clusterRows(reducedDim(sce, "PCA"), NNGraphParam())
 ```
@@ -553,20 +561,20 @@ the stochastic nature of tSNE means that every time the algorithm is applied a
 different representation will be produced *unless a random seed is set*. 
 
 ```{r runtsneumap}
-sce <- scater::runTSNE(sce, dimred="PCA")
-sce <- scater::runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE)
+sce <- scater::runTSNE(sce, dimred = "PCA")
+sce <- scater::runUMAP(sce, dimred = "PCA", external_neighbors = TRUE)
 
-snn.gr <- buildSNNGraph(sce, use.dimred="PCA", k=25)
+snn.gr <- buildSNNGraph(sce, use.dimred = "PCA", k = 25)
 sce$cluster_round1 <- factor(igraph::cluster_walktrap(snn.gr)$membership)
 
-plotTSNE(sce, colour_by="cluster_round1", text_by="cluster_round1")
+plotTSNE(sce, colour_by = "cluster_round1", text_by = "cluster_round1")
 
 # Doublet detection
 sce <- scDblFinder(sce)
 table(sce$scDblFinder.class)
 
-plotTSNE(sce, colour_by="scDblFinder.score", text_by="cluster_round1")
-plotTSNE(sce, colour_by="scDblFinder.class", text_by="cluster_round1")
+plotTSNE(sce, colour_by = "scDblFinder.score", text_by = "cluster_round1")
+plotTSNE(sce, colour_by = "scDblFinder.class", text_by = "cluster_round1")
 ```
 
 We look for doublets and try to put a preliminary name on each cell
@@ -579,14 +587,16 @@ tab
 
 ```{r runsingler}
 # cell type annotation, round one!
-pred_celltypes <- SingleR(test = sce, 
-                          ref = ref_annot_immgen, 
-                          labels = ref_annot_immgen$label.main,
-                          BPPARAM = BiocParallel::MulticoreParam(6))
+pred_celltypes <- SingleR(
+  test = sce,
+  ref = ref_annot_immgen,
+  labels = ref_annot_immgen$label.main,
+  BPPARAM = BiocParallel::MulticoreParam(6)
+)
 table(pred_celltypes$labels)
 sce$pred_celltypes <- pred_celltypes$labels
-plotTSNE(sce, colour_by= "pred_celltypes", text_by = "pred_celltypes")
-plotUMAP(sce, colour_by= "pred_celltypes", text_by = "pred_celltypes")
+plotTSNE(sce, colour_by = "pred_celltypes", text_by = "pred_celltypes")
+plotUMAP(sce, colour_by = "pred_celltypes", text_by = "pred_celltypes")
 ```
 
 We can often identify specific cell types and gain some understanding of the 
@@ -643,88 +653,92 @@ Can this become a problem later?
 sce_processed_all <- list()
 
 # sce_processed_b16_all <- lapply(names(sce_list_immunization_b16), function(dataset_id) {
-for(dataset_id in names(sce_list_all)) {
+for (dataset_id in names(sce_list_all)) {
   message(dataset_id)
-  
+
   cat("### QC round -", dataset_id, " \n")
-  
+
   sce <- sce_list_all[[dataset_id]]
-  
-  chr.loc <- mapIds(ens.mm.v102, keys=rownames(sce),
-                    keytype="GENENAME", column="SEQNAME")
-  is.mito <- which(chr.loc=="MT")
+
+  chr.loc <- mapIds(ens.mm.v102,
+    keys = rownames(sce),
+    keytype = "GENENAME", column = "SEQNAME"
+  )
+  is.mito <- which(chr.loc == "MT")
   is.mito
-  
+
   rowData(sce)$gene_name <- rownames(sce)
   rowData(sce)$location <- chr.loc
   sce <- addPerFeatureQC(sce)
-  
+
   rowData(sce)
-  
-  sce <- addPerCellQC(sce, subsets=list(Mito=is.mito))
-  qcstats <- perCellQCMetrics(sce, subsets=list(Mito=is.mito))
-  filtered <- quickPerCellQC(qcstats, percent_subsets="subsets_Mito_percent")
+
+  sce <- addPerCellQC(sce, subsets = list(Mito = is.mito))
+  qcstats <- perCellQCMetrics(sce, subsets = list(Mito = is.mito))
+  filtered <- quickPerCellQC(qcstats, percent_subsets = "subsets_Mito_percent")
   filtered
   colSums(as.data.frame(filtered))
   table(filtered$low_n_features, filtered$high_subsets_Mito_percent)
-  
+
   sce$discard <- filtered$discard
-  
-  print(plotColData(sce, y="subsets_Mito_percent", colour_by="discard"))
-  print(plotColData(sce, y="sum", colour_by="discard"))
-  print(plotColData(sce, y="detected", colour_by="discard"))
-  
-  print(plotColData(sce, x="sum", y="subsets_Mito_percent", colour_by="discard"))
-  print(plotColData(sce, x="detected", y="subsets_Mito_percent", colour_by="discard"))
-  
+
+  print(plotColData(sce, y = "subsets_Mito_percent", colour_by = "discard"))
+  print(plotColData(sce, y = "sum", colour_by = "discard"))
+  print(plotColData(sce, y = "detected", colour_by = "discard"))
+
+  print(plotColData(sce, x = "sum", y = "subsets_Mito_percent", colour_by = "discard"))
+  print(plotColData(sce, x = "detected", y = "subsets_Mito_percent", colour_by = "discard"))
+
   sce <- sce[, !filtered$discard]
-  
+
   clusters <- scran::quickCluster(sce)
-  sce <- scran::computeSumFactors(sce, clusters=clusters)
+  sce <- scran::computeSumFactors(sce, clusters = clusters)
   sce <- scater::logNormCounts(sce)
-  
+
   dec <- scran::modelGeneVar(sce)
   hvgs <- scran::getTopHVGs(dec, prop = 0.1)
-  
+
   set.seed(42)
-  sce <- scater::runPCA(sce, subset_row=hvgs)
-  
+  sce <- scater::runPCA(sce, subset_row = hvgs)
+
   clusters <- clusterRows(reducedDim(sce, "PCA"), NNGraphParam())
-  
-  sce <- scater::runTSNE(sce, dimred="PCA")
-  sce <- scater::runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE)
-  
-  snn.gr <- buildSNNGraph(sce, use.dimred="PCA", k=25)
+
+  sce <- scater::runTSNE(sce, dimred = "PCA")
+  sce <- scater::runUMAP(sce, dimred = "PCA", external_neighbors = TRUE)
+
+  snn.gr <- buildSNNGraph(sce, use.dimred = "PCA", k = 25)
   sce$cluster_round1 <- factor(igraph::cluster_walktrap(snn.gr)$membership)
-  
-  print(plotTSNE(sce, colour_by="cluster_round1", text_by="cluster_round1"))
-  
+
+  print(plotTSNE(sce, colour_by = "cluster_round1", text_by = "cluster_round1"))
+
   # Doublet detection
   sce <- scDblFinder(sce)
   table(sce$scDblFinder.class)
-  
-  print(plotTSNE(sce, colour_by="scDblFinder.score", text_by="cluster_round1"))
-  print(plotTSNE(sce, colour_by="scDblFinder.class", text_by="cluster_round1"))
-  
+
+  print(plotTSNE(sce, colour_by = "scDblFinder.score", text_by = "cluster_round1"))
+  print(plotTSNE(sce, colour_by = "scDblFinder.class", text_by = "cluster_round1"))
+
   tab <- findDoubletClusters(sce, sce$cluster_round1)
   tab
-  
+
   # cell type annotation, round one!
-  pred_celltypes <- SingleR(test = sce, 
-                            ref = ref_annot_immgen, 
-                            labels = ref_annot_immgen$label.main,
-                            BPPARAM = BiocParallel::MulticoreParam(6))
+  pred_celltypes <- SingleR(
+    test = sce,
+    ref = ref_annot_immgen,
+    labels = ref_annot_immgen$label.main,
+    BPPARAM = BiocParallel::MulticoreParam(6)
+  )
   table(pred_celltypes$labels)
   sce$pred_celltypes <- pred_celltypes$labels
-  print(plotTSNE(sce, colour_by= "pred_celltypes", text_by = "pred_celltypes"))
-  print(plotUMAP(sce, colour_by= "pred_celltypes", text_by = "pred_celltypes"))
-  
+  print(plotTSNE(sce, colour_by = "pred_celltypes", text_by = "pred_celltypes"))
+  print(plotUMAP(sce, colour_by = "pred_celltypes", text_by = "pred_celltypes"))
+
   # sce_processed_ctrl_r1 <- sce
-  
+
   # return(sce)
-  
+
   sce_processed_all[[dataset_id]] <- sce
-  
+
   cat("\n\n")
 }
 ```
@@ -760,18 +774,18 @@ What shall we do here?
 ```{r commongenes}
 gplots::venn(
   list(
-    rownames(sce_processed_all$control_untreated_r1), 
+    rownames(sce_processed_all$control_untreated_r1),
     rownames(sce_processed_all$evasion_DIVA_r1)
   )
 )
 
 common_genes <- intersect(
-  rownames(sce_processed_all$control_untreated_r1), 
+  rownames(sce_processed_all$control_untreated_r1),
   rownames(sce_processed_all$evasion_DIVA_r1)
 )
 
 
-sce_processed_commongenes <- lapply(names(sce_processed_all), function(arg){
+sce_processed_commongenes <- lapply(names(sce_processed_all), function(arg) {
   this_sce <- sce_processed_all[[arg]]
   this_sce <- this_sce[common_genes, ]
   this_sce
@@ -794,26 +808,28 @@ sce_processed_all <- lapply(sce_processed_all, logNormCounts)
 
 #--- variance-modelling ---#
 all.dec <- lapply(sce_processed_all, modelGeneVar)
-all.hvgs <- lapply(all.dec, getTopHVGs, prop=0.1)
+all.hvgs <- lapply(all.dec, getTopHVGs, prop = 0.1)
 
 #--- dimensionality-reduction ---#
 library(BiocSingular)
 set.seed(42)
-sce_processed_all <- mapply(FUN=runPCA, x=sce_processed_all, subset_row=all.hvgs, 
-                            MoreArgs=list(ncomponents=25, BSPARAM=RandomParam()), 
-                            SIMPLIFY=FALSE)
+sce_processed_all <- mapply(
+  FUN = runPCA, x = sce_processed_all, subset_row = all.hvgs,
+  MoreArgs = list(ncomponents = 25, BSPARAM = RandomParam()),
+  SIMPLIFY = FALSE
+)
 
 set.seed(42)
-sce_processed_all <- lapply(sce_processed_all, runTSNE, dimred="PCA")
+sce_processed_all <- lapply(sce_processed_all, runTSNE, dimred = "PCA")
 
 set.seed(42)
-sce_processed_all <- lapply(sce_processed_all, runUMAP, dimred="PCA", external_neighbors=TRUE)
+sce_processed_all <- lapply(sce_processed_all, runUMAP, dimred = "PCA", external_neighbors = TRUE)
 
 #--- clustering ---#
 for (n in names(sce_processed_all)) {
-  g <- buildSNNGraph(sce_processed_all[[n]], k=25, use.dimred='PCA')
+  g <- buildSNNGraph(sce_processed_all[[n]], k = 25, use.dimred = "PCA")
   clust <- igraph::cluster_walktrap(g)$membership
-  colLabels(sce_processed_all[[n]])  <- factor(clust)
+  colLabels(sce_processed_all[[n]]) <- factor(clust)
 }
 
 # the ones from run1
@@ -841,11 +857,11 @@ rescaled <- multiBatchNorm(sce_processed_all)
 sce_rescaled_control_untreated_r1 <- rescaled$control_untreated_r1
 sce_rescaled_control_untreated_r2 <- rescaled$control_untreated_r2
 sce_rescaled_control_untreated_r3 <- rescaled$control_untreated_r3
-sce_rescaled_control_DIVA_r1      <- rescaled$control_DIVA_r1
-sce_rescaled_control_DIVA_r2      <- rescaled$control_DIVA_r2
-sce_rescaled_evasion_DIVA_r1      <- rescaled$evasion_DIVA_r1
-sce_rescaled_evasion_DIVA_r2      <- rescaled$evasion_DIVA_r2
-sce_rescaled_evasion_DIVA_r3      <- rescaled$evasion_DIVA_r3
+sce_rescaled_control_DIVA_r1 <- rescaled$control_DIVA_r1
+sce_rescaled_control_DIVA_r2 <- rescaled$control_DIVA_r2
+sce_rescaled_evasion_DIVA_r1 <- rescaled$evasion_DIVA_r1
+sce_rescaled_evasion_DIVA_r2 <- rescaled$evasion_DIVA_r2
+sce_rescaled_evasion_DIVA_r3 <- rescaled$evasion_DIVA_r3
 sce_rescaled_evasion_untreated_r1 <- rescaled$evasion_untreated_r1
 sce_rescaled_evasion_untreated_r2 <- rescaled$evasion_untreated_r2
 sce_rescaled_evasion_untreated_r3 <- rescaled$evasion_untreated_r3
@@ -895,35 +911,37 @@ uncorrected <- cbind(
 
 library(scater)
 set.seed(42)
-uncorrected <- runPCA(uncorrected, subset_row=chosen.hvgs,
-                      BSPARAM=BiocSingular::RandomParam())
+uncorrected <- runPCA(uncorrected,
+  subset_row = chosen.hvgs,
+  BSPARAM = BiocSingular::RandomParam()
+)
 
-snn.gr <- buildSNNGraph(uncorrected, use.dimred="PCA")
+snn.gr <- buildSNNGraph(uncorrected, use.dimred = "PCA")
 clusters <- igraph::cluster_walktrap(snn.gr)$membership
-tab <- table(Cluster=clusters, Batch=uncorrected$batch_id)
+tab <- table(Cluster = clusters, Batch = uncorrected$batch_id)
 tab
 
 uncorrected$cluster_snn <- factor(clusters)
 
 set.seed(42)
-uncorrected <- runTSNE(uncorrected, dimred="PCA")
+uncorrected <- runTSNE(uncorrected, dimred = "PCA")
 
 set.seed(42)
-uncorrected <- runUMAP(uncorrected, dimred="PCA")
+uncorrected <- runUMAP(uncorrected, dimred = "PCA")
 
-plotTSNE(uncorrected, colour_by="cluster_snn")
-plotTSNE(uncorrected, colour_by="batch_id")
-plotTSNE(uncorrected, colour_by="run_id")
-plotTSNE(uncorrected, colour_by="condition")
-plotTSNE(uncorrected, colour_by="scDblFinder.class")
-plotTSNE(uncorrected, colour_by="pred_celltypes", text_by = "pred_celltypes")
+plotTSNE(uncorrected, colour_by = "cluster_snn")
+plotTSNE(uncorrected, colour_by = "batch_id")
+plotTSNE(uncorrected, colour_by = "run_id")
+plotTSNE(uncorrected, colour_by = "condition")
+plotTSNE(uncorrected, colour_by = "scDblFinder.class")
+plotTSNE(uncorrected, colour_by = "pred_celltypes", text_by = "pred_celltypes")
 
-plotUMAP(uncorrected, colour_by="cluster_snn")
-plotUMAP(uncorrected, colour_by="batch_id")
-plotUMAP(uncorrected, colour_by="run_id")
-plotUMAP(uncorrected, colour_by="condition")
-plotUMAP(uncorrected, colour_by="scDblFinder.class")
-plotUMAP(uncorrected, colour_by="pred_celltypes", text_by = "pred_celltypes")
+plotUMAP(uncorrected, colour_by = "cluster_snn")
+plotUMAP(uncorrected, colour_by = "batch_id")
+plotUMAP(uncorrected, colour_by = "run_id")
+plotUMAP(uncorrected, colour_by = "condition")
+plotUMAP(uncorrected, colour_by = "scDblFinder.class")
+plotUMAP(uncorrected, colour_by = "pred_celltypes", text_by = "pred_celltypes")
 ```
 
 ```{r}
@@ -951,8 +969,9 @@ mnn.out <- fastMNN(
   sce_rescaled_evasion_untreated_r1,
   sce_rescaled_evasion_untreated_r2,
   sce_rescaled_evasion_untreated_r3,
-  d=50, k=20, subset.row=chosen.hvgs,
-  BSPARAM=BiocSingular::RandomParam())
+  d = 50, k = 20, subset.row = chosen.hvgs,
+  BSPARAM = BiocSingular::RandomParam()
+)
 
 mnn.out
 
@@ -964,15 +983,15 @@ assay(mnn.out, "reconstructed")
 ## Dimensionality reduction & clustering - reloaded
 
 ```{r mnn-dimred-clustering}
-snn.gr <- buildSNNGraph(mnn.out, use.dimred="corrected")
+snn.gr <- buildSNNGraph(mnn.out, use.dimred = "corrected")
 clusters.mnn <- igraph::cluster_louvain(snn.gr)$membership
-tab.mnn <- table(Cluster=clusters.mnn, Batch=mnn.out$batch)
+tab.mnn <- table(Cluster = clusters.mnn, Batch = mnn.out$batch)
 tab.mnn
 
 set.seed(42)
-mnn.out <- runTSNE(mnn.out, dimred="corrected")
+mnn.out <- runTSNE(mnn.out, dimred = "corrected")
 set.seed(42)
-mnn.out <- runUMAP(mnn.out, dimred="corrected")
+mnn.out <- runUMAP(mnn.out, dimred = "corrected")
 
 sce_merged <- logNormCounts(uncorrected)
 sce_merged$clusters.mnn <- factor(clusters.mnn)
@@ -981,21 +1000,21 @@ reducedDim(sce_merged, "MNN") <- reducedDim(mnn.out, "corrected")
 reducedDim(sce_merged, "TSNE") <- reducedDim(mnn.out, "TSNE")
 reducedDim(sce_merged, "UMAP") <- reducedDim(mnn.out, "UMAP")
 
-plotTSNE(sce_merged, colour_by="clusters.mnn")
-plotTSNE(sce_merged, colour_by="batch_id")
-plotTSNE(sce_merged, colour_by="run_id")
-plotTSNE(sce_merged, colour_by="sample_id")
-plotTSNE(sce_merged, colour_by="condition")
-plotTSNE(sce_merged, colour_by="scDblFinder.class")
-plotTSNE(sce_merged, colour_by="pred_celltypes", text_by = "pred_celltypes")
+plotTSNE(sce_merged, colour_by = "clusters.mnn")
+plotTSNE(sce_merged, colour_by = "batch_id")
+plotTSNE(sce_merged, colour_by = "run_id")
+plotTSNE(sce_merged, colour_by = "sample_id")
+plotTSNE(sce_merged, colour_by = "condition")
+plotTSNE(sce_merged, colour_by = "scDblFinder.class")
+plotTSNE(sce_merged, colour_by = "pred_celltypes", text_by = "pred_celltypes")
 
-plotUMAP(sce_merged, colour_by="clusters.mnn")
-plotUMAP(sce_merged, colour_by="batch_id")
-plotUMAP(sce_merged, colour_by="run_id")
-plotUMAP(sce_merged, colour_by="sample_id")
-plotUMAP(sce_merged, colour_by="condition")
-plotUMAP(sce_merged, colour_by="scDblFinder.class")
-plotUMAP(sce_merged, colour_by="pred_celltypes", text_by = "pred_celltypes")
+plotUMAP(sce_merged, colour_by = "clusters.mnn")
+plotUMAP(sce_merged, colour_by = "batch_id")
+plotUMAP(sce_merged, colour_by = "run_id")
+plotUMAP(sce_merged, colour_by = "sample_id")
+plotUMAP(sce_merged, colour_by = "condition")
+plotUMAP(sce_merged, colour_by = "scDblFinder.class")
+plotUMAP(sce_merged, colour_by = "pred_celltypes", text_by = "pred_celltypes")
 
 table(sce_merged$sample_id, sce_merged$pred_celltypes)
 ```
@@ -1026,14 +1045,18 @@ ref_annot_immgen
 ref_annot_mouse
 
 # cell type annotation, round !
-celltype_immgen_main <- SingleR(test = sce_merged, 
-                                ref = ref_annot_immgen, 
-                                labels = ref_annot_immgen$label.main,
-                                BPPARAM = BiocParallel::MulticoreParam(6))
-celltype_immgen_fine <- SingleR(test = sce_merged, 
-                                ref = ref_annot_immgen, 
-                                labels = ref_annot_immgen$label.fine,
-                                BPPARAM = BiocParallel::MulticoreParam(6))
+celltype_immgen_main <- SingleR(
+  test = sce_merged,
+  ref = ref_annot_immgen,
+  labels = ref_annot_immgen$label.main,
+  BPPARAM = BiocParallel::MulticoreParam(6)
+)
+celltype_immgen_fine <- SingleR(
+  test = sce_merged,
+  ref = ref_annot_immgen,
+  labels = ref_annot_immgen$label.fine,
+  BPPARAM = BiocParallel::MulticoreParam(6)
+)
 
 table(celltype_immgen_main$labels)
 table(celltype_immgen_fine$labels)
@@ -1043,14 +1066,18 @@ sce_merged$celltype_immgen_fine <- celltype_immgen_fine$labels
 
 
 ```{r celltypeanno-mouse, cache=TRUE}
-celltype_mouse_main <- SingleR(test = sce_merged, 
-                               ref = ref_annot_mouse, 
-                               labels = ref_annot_mouse$label.main,
-                               BPPARAM = BiocParallel::MulticoreParam(6))
-celltype_mouse_fine <- SingleR(test = sce_merged, 
-                               ref = ref_annot_mouse, 
-                               labels = ref_annot_mouse$label.fine,
-                               BPPARAM = BiocParallel::MulticoreParam(6))
+celltype_mouse_main <- SingleR(
+  test = sce_merged,
+  ref = ref_annot_mouse,
+  labels = ref_annot_mouse$label.main,
+  BPPARAM = BiocParallel::MulticoreParam(6)
+)
+celltype_mouse_fine <- SingleR(
+  test = sce_merged,
+  ref = ref_annot_mouse,
+  labels = ref_annot_mouse$label.fine,
+  BPPARAM = BiocParallel::MulticoreParam(6)
+)
 
 table(celltype_mouse_main$labels)
 table(celltype_mouse_fine$labels)
@@ -1060,25 +1087,25 @@ sce_merged$celltype_mouse_fine <- celltype_mouse_fine$labels
 
 
 ```{r celltypeannoplots}
-# celltype_novershtern_main <- SingleR(test = sce_merged, 
-#                                      ref = ref_annot_novershtern, 
+# celltype_novershtern_main <- SingleR(test = sce_merged,
+#                                      ref = ref_annot_novershtern,
 #                                      labels = ref_annot_novershtern$label.main,
 #                                      BPPARAM = BiocParallel::MulticoreParam(6))
-# celltype_novershtern_fine <- SingleR(test = sce_merged, 
-#                                      ref = ref_annot_novershtern, 
+# celltype_novershtern_fine <- SingleR(test = sce_merged,
+#                                      ref = ref_annot_novershtern,
 #                                      labels = ref_annot_novershtern$label.fine,
 #                                      BPPARAM = BiocParallel::MulticoreParam(6))
-# 
+#
 # table(celltype_novershtern_main$labels)
 # table(celltype_novershtern_fine$labels)
 # sce_merged$celltype_novershtern_main <- celltype_novershtern_main$labels
 # sce_merged$celltype_novershtern_fine <- celltype_novershtern_fine$labels
 
-plotTSNE(sce_merged, colour_by= "celltype_immgen_main", text_by = "celltype_immgen_main")
-plotUMAP(sce_merged, colour_by= "celltype_immgen_main", text_by = "celltype_immgen_main")
+plotTSNE(sce_merged, colour_by = "celltype_immgen_main", text_by = "celltype_immgen_main")
+plotUMAP(sce_merged, colour_by = "celltype_immgen_main", text_by = "celltype_immgen_main")
 
-plotTSNE(sce_merged, colour_by= "celltype_mouse_main", text_by = "celltype_mouse_main")
-plotUMAP(sce_merged, colour_by= "celltype_mouse_main", text_by = "celltype_mouse_main")
+plotTSNE(sce_merged, colour_by = "celltype_mouse_main", text_by = "celltype_mouse_main")
+plotUMAP(sce_merged, colour_by = "celltype_mouse_main", text_by = "celltype_mouse_main")
 
 sce_merged
 ```
@@ -1138,10 +1165,11 @@ sce <- sce_merged
 sce <- sce[rowSums(counts(sce) > 0) > 0, ]
 dim(sce)
 (sce <- prepSCE(sce,
-    kid = "celltype_immgen_main", # subpopulation assignments
-    gid = "condition",    # group IDs (ctrl/stim)
-    sid = "sample_id",    # sample IDs (ctrl/stim.1234)
-    drop = FALSE))        # drop all other colData columns?
+  kid = "celltype_immgen_main", # subpopulation assignments
+  gid = "condition", # group IDs (ctrl/stim)
+  sid = "sample_id", # sample IDs (ctrl/stim.1234)
+  drop = FALSE
+)) # drop all other colData columns?
 
 nk <- length(kids <- levels(sce$cluster_id))
 ns <- length(sids <- levels(sce$sample_id))
@@ -1165,50 +1193,52 @@ abundances
 
 props <- abundances
 for (i in 1:ncol(props)) {
-  props[,i] <- props[,i]/colSums(props)[i]
+  props[, i] <- props[, i] / colSums(props)[i]
 }
-pheatmap::pheatmap(props, 
-                   cluster_cols = FALSE, 
-                   cluster_rows = FALSE)
-pheatmap::pheatmap(props - rowMeans(props), 
-                   cluster_cols = FALSE, 
-                   cluster_rows = FALSE)
+pheatmap::pheatmap(props,
+  cluster_cols = FALSE,
+  cluster_rows = FALSE
+)
+pheatmap::pheatmap(props - rowMeans(props),
+  cluster_cols = FALSE,
+  cluster_rows = FALSE
+)
 
-extra.info <- colData(sce)[match(colnames(abundances), sce$sample_id),]
+extra.info <- colData(sce)[match(colnames(abundances), sce$sample_id), ]
 ```
 
 Apart from simply plotting amounts and proportions, we can also compute quantitatively the changes in the abundances levels with "classical" DE approaches.
 
 ```{r}
 library(edgeR)
-y.ab <- DGEList(abundances, samples=extra.info)
+y.ab <- DGEList(abundances, samples = extra.info)
 y.ab
 
 
-keep <- filterByExpr(y.ab, group=y.ab$samples$group)
-y.ab <- y.ab[keep,]
+keep <- filterByExpr(y.ab, group = y.ab$samples$group)
+y.ab <- y.ab[keep, ]
 summary(keep)
 
 
-design <- model.matrix(~factor(group), y.ab$samples)
+design <- model.matrix(~ factor(group), y.ab$samples)
 
-y.ab <- estimateDisp(y.ab, design, trend="none")
+y.ab <- estimateDisp(y.ab, design, trend = "none")
 summary(y.ab$common.dispersion)
 
-plotBCV(y.ab, cex=1)
+plotBCV(y.ab, cex = 1)
 
-fit.ab <- glmQLFit(y.ab, design, robust=TRUE, abundance.trend=FALSE)
+fit.ab <- glmQLFit(y.ab, design, robust = TRUE, abundance.trend = FALSE)
 summary(fit.ab$var.prior)
 
 summary(fit.ab$df.prior)
 
-plotQLDisp(fit.ab, cex=1)
+plotQLDisp(fit.ab, cex = 1)
 ```
 
 After the dispersion plot, we can compute the results - these will be grouped at the cell type level.
 
 ```{r}
-res <- glmQLFTest(fit.ab, coef=ncol(design))
+res <- glmQLFTest(fit.ab, coef = ncol(design))
 summary(decideTests(res))
 
 topTags(res, n = 30)
@@ -1240,15 +1270,17 @@ dim(sce)
 - `"gid"`: experimental group/condition (e.g., control/treatment, healthy/diseased, ...)
 
 ```{r pb2} 
-(sce <- prepSCE(sce, 
-    kid = "celltype_immgen_main", # subpopulation assignments
-    gid = "condition",   # group IDs (ctrl/stim)
-    sid = "sample_id",    # sample IDs (ctrl/stim.1234)
-    drop = FALSE))        # drop all other colData columns
+(sce <- prepSCE(sce,
+  kid = "celltype_immgen_main", # subpopulation assignments
+  gid = "condition", # group IDs (ctrl/stim)
+  sid = "sample_id", # sample IDs (ctrl/stim.1234)
+  drop = FALSE
+)) # drop all other colData columns
 
 nk <- length(kids <- levels(sce$cluster_id))
 ns <- length(sids <- levels(sce$sample_id))
-names(kids) <- kids; names(sids) <- sids
+names(kids) <- kids
+names(sids) <- sids
 kids
 sids
 
@@ -1268,8 +1300,9 @@ sce <- sce[, sce$cluster_id %in% with_some_cells]
 
 
 pb <- aggregateData(sce,
-    assay = "counts", fun = "sum",
-    by = c("cluster_id", "sample_id"))
+  assay = "counts", fun = "sum",
+  by = c("cluster_id", "sample_id")
+)
 # one sheet per subpopulation
 assayNames(pb)
 # pseudobulks for 1st subpopulation
@@ -1295,11 +1328,12 @@ dimnames(mm) <- list(ei$sample_id, levels(ei$group_id))
 contrast <- makeContrasts("evasion_DIVA-evasion_untreated", levels = mm)
 
 
-res <- pbDS(pb, design = mm, contrast = contrast, verbose = TRUE,
-            min_cells = 0,
-            filter = "none", 
-            BPPARAM = BiocParallel::MulticoreParam(2)
-            )
+res <- pbDS(pb,
+  design = mm, contrast = contrast, verbose = TRUE,
+  min_cells = 0,
+  filter = "none",
+  BPPARAM = BiocParallel::MulticoreParam(2)
+)
 
 # access results table for 1st comparison
 tbl <- res$table$`evasion_DIVA-evasion_untreated`
@@ -1321,11 +1355,12 @@ for (deset in names(tbl)) {
 
   cat("### DEres - all, by celltype, cluster ", deset, " {-}\n")
 
-  k_res %>% 
-    arrange(p_val) %>% 
-    format(digits = 3) %>% 
-    head(50) %>% 
-    knitr::kable() %>% print
+  k_res %>%
+    arrange(p_val) %>%
+    format(digits = 3) %>%
+    head(50) %>%
+    knitr::kable() %>%
+    print()
 
   cat("\n\n")
 }
@@ -1367,7 +1402,7 @@ library("org.Mm.eg.db")
 bg_universe <- rownames(sce)
 FDR_threshold <- 0.1
 
-func_res <- list()    
+func_res <- list()
 
 for (deset in names(tbl)) {
   message("FuncEnr", deset)
@@ -1375,11 +1410,11 @@ for (deset in names(tbl)) {
 
   cat("### Func enrichment - all, by cell type, cell type ", deset, " {-}\n")
 
-  k_res %>% 
+  k_res %>%
     arrange(p_val) -> k_res_sorted
 
   de_this <- k_res_sorted[k_res_sorted$p_adj.loc < FDR_threshold, ]
-  
+
   ego_this <- enrichGO(
     gene = de_this$gene,
     universe = bg_universe,
@@ -1391,10 +1426,11 @@ for (deset in names(tbl)) {
     qvalueCutoff = 0.05,
     readable = FALSE
   )
-  
-  head(ego_this, 50) %>% 
-    knitr::kable() %>% print
-  
+
+  head(ego_this, 50) %>%
+    knitr::kable() %>%
+    print()
+
   func_res[[deset]] <- as.data.frame(ego_this)
 }
 
@@ -1452,7 +1488,7 @@ We extract the markers for the monocytes in the evasion DIVA2 condition.
 mymarkers_evasion_diva$Monocytes
 
 mono_markers <- mymarkers_evasion_diva$Monocytes
-mono_markers_sorted <- as.data.frame(mono_markers[ order(mono_markers$mean.AUC, decreasing = TRUE),])
+mono_markers_sorted <- as.data.frame(mono_markers[order(mono_markers$mean.AUC, decreasing = TRUE), ])
 
 mono_markers_sorted$gene_name <- rownames(mono_markers_sorted)
 
