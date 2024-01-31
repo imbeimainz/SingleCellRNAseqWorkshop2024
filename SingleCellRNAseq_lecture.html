@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Single-Cell RNA-seq Data Analysis</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/FMstyles.css" type="text/css" />
+    <link rel="stylesheet" href="css/animate.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, title-slide
+
+.title[
+# Single-Cell RNA-seq Data Analysis
+]
+.subtitle[
+## Bioinformatics Workshop - IMBEI, University Medical Center Mainz
+]
+.author[
+### <p>Instructors: Najla Abassi, Annekathrin Nedwed, Alicia Schulze, Federico Marini</br></p>
+]
+.date[
+### 2024/02/01-02</br></br>
+<p align="center">
+<a href="https://imbeimainz.github.io/GTIPI2022"><img src="images/gtipi_logo.png" alt="" height="100"/></a></br> <code>Material adapted from the GTIPI lecture by Charlotte Soneson and Federico Marini</code>
+</p>
+]
+
+---
+
+
+layout: true
+
+
+
+---
+
+# An introduction round
+
+--
+
+Say a few words about you and why you are here!
+
+What do you expect to learn today - and tomorrow?
+
+---
+
+# Goals
+
+- understand what single-cell RNA-sequencing is and "can do for you"
+- get to know the data and the data analysis steps
+- learn how it is possible to explore these datasets in an interactive and reproducible way
+
+--
+
+Understand general concepts behind their analysis &gt; knowing which tool you should use right now, the field is (still) evolving very fast - but some common guidelines seem to have emerged
+
+"Orchestrating Single-Cell Analysis with Bioconductor" is an excellent starting point for many to read about the state of the art in R/Bioconductor + the companion book online (https://osca.bioconductor.org/)
+
+--
+
+### Requirements:
+
+Some familiarity with R (and RNA-sequencing) - see the OSCA book for a primer for that as well
+
+&lt;!-- The goal of this book is to provide a solid foundation in the usage of Bioconductor tools for single-cell RNA-seq analysis by walking through various steps of typical workflows using example datasets. We strive to tackle key concepts covered in the manuscript, “Orchestrating Single-Cell Analysis with Bioconductor”, with each workflow covering these in varying detail, as well as essential preliminaries that are important for following along with the workflows on your own. --&gt;
+
+
+
+---
+
+# Why single-cell?
+
+--
+
+Think of a _smoothie_ vs _the berries_ - what are you interested into?
+
+--
+
+&lt;blockquote class="twitter-tweet"&gt;&lt;p lang="en" dir="ltr"&gt;Here is the transcriptomics insight: the bulk RNA-seq (Fig 1), single-cell RNA-seq (Fig. 2), spatial transcriptomics (Fig. 3), and the original organ (Fig. 4). &lt;br&gt;&lt;br&gt;(Feel free to cite with image credit to Bo Xia) &lt;a href="https://t.co/wQLx8PDVFm"&gt;pic.twitter.com/wQLx8PDVFm&lt;/a&gt;&lt;/p&gt;&amp;mdash; Bo Xia (@BoXia7) &lt;a href="https://twitter.com/BoXia7/status/1261464021322137600?ref_src=twsrc%5Etfw"&gt;May 16, 2020&lt;/a&gt;&lt;/blockquote&gt; &lt;script async src="https://platform.twitter.com/widgets.js" charset="utf-8"&gt;&lt;/script&gt; 
+
+---
+
+# Why single-cell?
+
+In single-cell RNA-sequencing (scRNA-seq), the RNA of a single cell is sequenced
+
+--
+
+scRNA-seq allows disentanglement of complex biological systems
+
+
+--
+
+Gene expression data on a single-cell level allows us to answer hypotheses of interest that were previously unavailable with bulk RNA-seq - Got an example for this?
+
+--
+
+- Heterogeneity of gene expression between single cells
+- Identification of novel and rare cell types
+- Reconstructing single-cell developmental/activational trajectories (e.g. development of stem cell to a mature cell type, activation of cells following treatment)
+- Studying sparsely occurring cell populations (e.g. stem cell niches)
+
+---
+
+# Protocols
+
+scRNA-seq remains a fast-paced field with continuous active developments
+
+--
+
+&lt;p align="center"&gt;
+&lt;img src="images/sc_protocols.jpg" alt="" height="400"/&gt;
+&lt;/p&gt;
+
+Svensson, 2018 (Nat Protocols)
+
+---
+
+# Protocols
+
+scRNA-seq remains a fast-paced field with continuous active developments
+
+&lt;p align="center"&gt;
+&lt;img src="images/sc_studies.jpg" alt="" height="400"/&gt;
+&lt;/p&gt;
+
+Svensson, 2019 (bioRxiv)
+
+---
+
+# There's not just one single cell method
+
+"I'm planning my next experiment" - Which one to choose?
+
+&lt;p align="center"&gt;
+&lt;img src="images/sc_methods.jpg" alt="" height="400"/&gt;
+&lt;/p&gt;
+
+---
+
+# There's not just one single cell method
+
+"I'm planning my next experiment" - Which one to choose?
+
+
+
+Droplet-based protocols are more suited for 
+- Examining the composition of a tissue
+- Identifying novel / rare cell types
+
+--
+
+Plate-based protocols are more suited for
+- Studying a rare cell population with known surface markers (through FACS sorting)
+- Isoform-level analysis (full-length transcript information)
+- Marker gene discovery?
+
+--
+
+Droplet-based protocols allow for a higher throughput, plate-based protocols seem to have a higher signal-to-noise ratio per cell
+
+--
+
+*Think of the one most suitable/tailored to your research question!*
+
+--
+
+*Think of a research question!*
+
+---
+
+# There's not just one single cell method
+
+Quantification differs!
+
+- Plate-based protocols adopt read counting (like in bulk RNA-seq)
+- Droplet-based protocols typically adopt unique molecular identifiers (UMIs) to quantify gene expression
+
+&lt;p align="center"&gt;
+&lt;img src="images/sc_counting.png" alt="" height="250"/&gt;
+&lt;/p&gt;
+
+--
+
+- Read counts are affected by e.g. gene length, sequencing depth and PCR amplification bias
+- UMIs were introduced to avoid this, however this is only true if every cell is sequenced to saturation
+- Between-cell normalization is still crucial!
+- Due to the counting strategy, UMI counts can be interpreted as a proxy for the number of transcripts originally present in the cell
+
+
+---
+
+# General features of sc data
+
+- Count matrices are _also_ very different between protocols
+- (Very) sparse matrices!
+- (Much) more variable than bulk RNA-seq
+
+&lt;p align="center"&gt;
+&lt;img src="images/sc_counts.png" alt="" height="300"/&gt;
+&lt;/p&gt;
+
+--
+
+*Can you think of some consequences for this?*
+
+---
+
+background-image: url("images/workflow_singlecell.jpg")
+background-size: contain
+background-position: 50% 50%
+class: bottom, center
+
+# An overview of the workflow(s)
+
+---
+
+# An overview of the workflow(s)
+
+As of 2024, there are some "overarching" analytic frameworks
+
+* Seurat
+* Scanpy
+* Bioconductor
+
+--
+
+Which one to choose?  
+Possibility to interconvert among formats make the choice less painful
+
+--
+
+&lt;p align="center"&gt;
+&lt;img src="images/paper_cups.jpeg" alt="" height="300"/&gt;
+&lt;/p&gt;
+
+---
+
+background-image: url("images/Bioconductor-serial.gif")
+background-position: 50% 10%
+class: bottom, center
+
+# Orchestrating Single-Cell Analysis with Bioconductor
+
+---
+
+# Quality Control: never enough
+
+We'll need to identify (and mark/remove)
+
+- low-quality (e.g. dead/damaged) cells
+- doublets (droplets/wells containing 2+ cells)
+- empty droplets (droplets/wells without any cells)
+
+Typically in data-driven way, with adaptive thresholds (DoubletFinder, EmptyDrops)
+
+A very good friend of yours: the `scater` package!
+
+---
+
+# "Same" data, different workflow
+
+How does the data look like?
+
+--
+
+- Bulk RNA-seq: we typically know which groups we want to compare (e.g., treatment vs. control)
+
+--
+
+- In single-cell RNA-seq, we are often interested in comparing gene expression between different cell types
+
+Highly recommended: use the `SingleCellExperiment` class as a container for your data!
+
+--
+
+Still: we first must identify the cell types in order to be able to compare them 
+
+- The differential expression analysis is usually preceded by identification of cell identity, typically through clustering in reduced dimensionality
+
+--
+
+What's a cell identity anyway? This can be vague, and may include both cell type (e.g., leukocyte vs. erythrocyte) and cell state (e.g., cell cycle phase)
+
+---
+
+# Normalization
+
+--
+
+Systematic differences in sequencing coverage between libraries are often observed in single-cell RNA sequencing data
+
+--
+
+Normalization aims to remove these differences such that they do not interfere with comparisons of the expression profiles between cells
+
+-&gt; Any observed heterogeneity or differential expression within the cell population are driven by biology and not technical biases
+
+--
+
+Normalization by deconvolution works very nicely (pooling counts to better estimate size factors) - `scran` and `calculateSumFactors()`
+
+--
+
+`logNormCounts` does... compute log-transformed normalized expression values (useful e.g. for visualization)
+
+--
+
+This is different from batch correction (relevant when integrating different samples)!
+
+---
+
+# Feature selection
+
+--
+
+Next tasks: clustering and dimensionality reduction, comparing cells based on their gene expression profiles
+
+Required: aggregating per-gene differences into a single (dis)similarity metric between a pair of cells
+
+--
+
+- The choice of genes to use in this calculation has a major impact 
+- We want to select genes that contain useful information about the biology of the system 
+- ...while removing genes that contain random noise. 
+
+--
+
+Preserve interesting biological structure + reduce the size of the data to improve computational efficiency of later steps
+
+--
+
+`modelGeneVar()` + `getTopHVGs()` 
+
+---
+
+# Dimensionality reduction
+
+--
+
+- Comparing 1 gene vs 1 gene: easy-peasy
+
+- When dealing with the distance between many genes vs many: it can even become untractable!
+
+--
+
+Goal of dimensionality reduction: reduce our G x C matrix to a Q x C matrix, where Q &lt;&lt; G, while retaining as much signal in the data as possible
+
+Purposes:
+- Visualization
+- Identification of batch effects
+- Clustering in reduced dimensionality
+
+--
+
+Traditional DR methods are insufficient, e.g. PCA alone is inappropriate for count data (Townes et al. 2019)
+
+Many dimensionality reduction methods are being used in scRNA-seq - Most popular ones are non-linear DR methods, e.g. t-SNE and UMAP (not restricted to linear transformations, nor obliged to accurately represent distances between distant populations)
+
+--
+
+Run PCA + Cluster on the first 10-50 PCs + Visualize the cluster identities on the t-SNE plot (i.e. avoid using t-SNE coordinates directly for clustering)
+
+---
+
+# Clustering
+
+--
+
+Different cell identity -&gt; reflected by a different gene expression profile? We can cluster cells to identify cell types
+
+- Goal: group cells together that have similar expression profiles 
+- Typically occurs in reduced dimension or based on a subset of interesting genes
+
+- Next step: after annotation based on marker genes, the clusters can be treated as proxies for more abstract biological concepts such as cell types or states. Critical step for extracting biological insights!
+
+--
+
+Methods more refined than classical k-means are available: 
+
+- Graph-based methods: cluster cells that are connected together (e.g., using nearest neighbours), e.g. `buildSNNGraph()` or Seurat (uses Louvain's algorithm behind the scenes)
+- Consensus clustering: cluster cells that are often clustered together over several clustering algorithms (some cells will be unclustered), e.g. RSEC (Risso et al. (2018)) 
+
+--
+
+**Think!**
+What does a clustering algorithm do? What is the truth (e.g. true number of clusters)? Iterative approaches are entirely permissible for data exploration, which constitutes the majority of all scRNA-seq data analyses!
+
+---
+
+# Marker gene detection
+
+Goal: identify the genes that drive separation between clusters, to interpret our clustering results...
+
+--
+
+... so that we can assign biological meaning to each cluster based on their functional annotation
+
+This step is usually based around the retrospective detection of differential expression between clusters
+
+Option: focus on up-regulated markers (easier to interpret to assign putative identity)
+
+--
+
+`findMarkers` in `scran`
+
+--
+
+*Just a provocation? Do we all agree on what a marker gene is?*
+
+---
+
+# Cell type annotation
+
+--
+
+Obtaining clusters of cells: straightforward - determine what biological state is represented by each of those clusters: much more difficult
+
+**Aim**: bridge the gap between the current dataset and prior biological knowledge
+
+--
+
+"I’ll know it when I see it"-intuition, not so amenable for large scale computational analyses -&gt; interpretation of scRNA-seq data is often manual and a common bottleneck in the analysis workflow.
+
+Still: we can use various computational approaches that exploit prior information to assign meaning (labels) to an uncharacterized scRNA-seq dataset (yours) 
+
+--
+
+`SingleR` can have lots of goodies for you, provided a suitable reference exists - It assigns labels to cells based on the reference samples with the highest Spearman rank correlations (kind of a rank-based variant of k-nearest-neighbor classification)
+
+--
+
+Other options: Seurat's reference mapping, label transfer, multi-modal data becomes available
+
+--
+
+**Think!**  
+What can be the key issues here?
+
+&lt;!-- missing cell types, unmatched references, novel cell types, ... --&gt;
+
+---
+
+# Integrating datasets
+
+--
+
+Batch effects: systematic technical variation in the dataset that are not of interest
+
+Large scale experiments usually need to generate data across multiple batches due to logistical constraints -&gt; Can represent known sources of variation, e.g. plate effects, different sequencing runs
+
+--
+
+Computational correction of these effects is critical for eliminating batch-to-batch variation, aids identification of biological cell types
+
+--
+
+Care must be taken to avoid confounding, e.g. do not separate control and treatment cells on two different plates for plate-based scRNA-seq
+
+--
+
+MNN correction (Haghverdi 2018) and Seurat's `FindIntegrationAnchors` + `IntegrateData` work reasonably well in many cases.  
+If using (extremely) large datasets, Harmony can also be a very valid option.
+
+--
+
+**Think!**  
+How do you know whether the integration was helpful (or deleterious)?
+
+---
+
+# Comparisons
+
+--
+
+**Aim**: discover marker genes that differentiate cell types or biological groups
+
+The statistical models used in scRNA-seq typically build on the GLM framework
+
+--
+
+Differential analyses of multi-condition scRNA-seq experiments, split into two categories 
+
+- Differential Expression (DE) - tests for changes in expression between conditions for cells of the same type that are present in both conditions
+- Differential Abundance (DA) - tests for changes in the composition of cell types (or states, etc.) between conditions
+
+--
+
+DA and DE analyses are simply two different perspectives on the same phenomena - For any comprehensive characterization of differences between populations, consider both analyses!
+
+--
+
+So-called pseudobulk methods + count-based bulk RNA-seq DE methods (e.g., edgeR, DESeq2) can be directly leveraged!
+
+See the `muscat` package for an excellent implementation
+
+---
+
+# Dynamic systems
+
+--
+
+Many biological processes manifest as a dynamical continuum of changes in the cellular state.
+
+This continuity is represented with a trajectory
+
+--
+
+A trajectory here is a path through the high-dimensional expression space, traversing the various cellular states associated with a continuous process (e.g. differentiation)
+
+--
+
+- Based on the trajectory, one can estimate _pseudotime_ for each cell
+- Pseudotime corresponds to the length of the trajectory, and can be considered as a proxy for true developmental time
+
+--
+
+`slingshot` + graph-based minimum spanning trees + PAGA
+
+---
+
+# New technology
+
+Novel technologies are allowing for spatial scRNA-seq
+
+Development of many single-cell multi-omics protocols:
+
+- REAP-seq, CITE-seq: RNA and protein abundance
+- sci-CAR: RNA abundance and chromatin conformation (i.e., ATAC-seq)
+- G&amp;T-seq: DNA-seq and RNA-seq
+- sc-GEM: RNA-seq, with genotype and methylation information 
+- scNMT: nucleosome, methylation, transcription
+
+--
+
+Who's up to generate such cool datasets?  
+
+---
+
+# Interactive data exploration
+
+--
+
+Visualization and exploration are fundamental at **any** of these stages.
+
+Left at the end only to bridge over to the next section :)
+
+--
+
+### Meet `iSEE`
+
+&lt;p align="center"&gt;
+&lt;img src="images/isee.png" alt="" height = 350/&gt;
+&lt;/p&gt;
+
+---
+
+
+background-image: url("images/console_logcounts_sparse.png")
+background-size: contain
+background-position: 50% 50%
+class: middle, center
+
+# (Interactive) Exploration and visualization: why?
+
+Effective and efficient methods are key to deliver...
+
+--
+
+&lt;svg viewBox="0 0 512 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"&gt;&lt;/path&gt;&lt;/svg&gt; better **quality assessment**
+
+--
+
+&lt;svg viewBox="0 0 512 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"&gt;&lt;/path&gt;&lt;/svg&gt; better **generation of research hypotheses**
+
+--
+
+&lt;svg viewBox="0 0 512 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"&gt;&lt;/path&gt;&lt;/svg&gt; better **representation of the results**
+
+--
+
+&lt;svg viewBox="0 0 512 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z"&gt;&lt;/path&gt;&lt;/svg&gt; better **communication** of findings
+
+---
+
+# &lt;i class="fas fa-users"&gt;&lt;/i&gt; The iSEE team
+
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td width="25%"&gt;&lt;a href="https://kevinrue.github.io"&gt;&lt;img src="images/kevin-rue.jpg"&gt;&lt;/a&gt;&lt;/td&gt;
+&lt;td width="25%"&gt;&lt;a href="https://csoneson.github.io"&gt;&lt;img src="images/charlotte-soneson.png"&gt;&lt;/a&gt;&lt;/td&gt;
+&lt;td width="25%"&gt;&lt;a href="https://federicomarini.github.io"&gt;&lt;img src="images/federico-marini.png"&gt;&lt;/a&gt;&lt;/td&gt;
+&lt;td width="25%"&gt;&lt;a href="https://orcid.org/0000-0002-3564-4813"&gt;&lt;img src="images/aaron-lun.png"&gt;&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align='center' width="25%"&gt;Kevin&lt;/td&gt;
+&lt;td align='center' width="25%"&gt;Charlotte&lt;/td&gt;
+&lt;td align='center' width="25%"&gt;Federico&lt;/td&gt;
+&lt;td align='center' width="25%"&gt;Aaron&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p align="center"&gt;
+&lt;img src="images/ss_isee.png" alt="" height = 150/&gt;
+&lt;/p&gt;
+
+[`https://f1000research.com/articles/7-741/v1`](https://f1000research.com/articles/7-741/v1)
+&lt;br&gt;**[`https://bioconductor.org/packages/iSEE/`](https://bioconductor.org/packages/iSEE/)**
+
+---
+
+# &lt;i class="fas fa-pencil-ruler"&gt;&lt;/i&gt; &lt;i class="far fa-lightbulb"&gt;&lt;/i&gt; Designed in &amp; for Bioconductor
+
+&lt;img src="images/biocstickers.jpg" width="75%" style="display: block; margin: auto;" /&gt;
+
+
+[`https://bioconductor.org`](https://bioconductor.org)
+
+???
+
+iSEE tightly integrates with other packages of the Bioconductor project.
+
+---
+
+# SingleCellExperiment
+
+&lt;p align="center"&gt;
+&lt;img src="images/bioc-figures_v2-02.png" alt="" height = 370/&gt;
+&lt;/p&gt;
+
+.footnote[
+
+[`https://osca.bioconductor.org`](https://osca.bioconductor.org)
+
+]
+
+???
+
+iSEE focuses on the SingleCellExperiment class.
+This class stores all the data and metadata associated with assays, cells, and features.
+
+---
+
+# SingleCellExperiment usage in a workflow
+
+.pull-left[
+- Data import (`DropletUtils`, `tximeta`)
+
+- Quality control (`scater`)
+
+- Normalization, feature selection (`scran`, `zinbwave`)
+
+- Dimensionality reduction (`BiocSingular`, `scater`, `zinbwave`)
+
+- Clustering (`SC3`, `clustree`)
+
+- Marker gene detection (`scran`, `scDD`)
+
+- Trajectory inference (`slingshot`)
+
+- Visualization (`iSEE`) and much more...
+]
+
+.pull-right[
+&lt;img src="images/bioc-figures_v2-03.png" width="1960" style="display: block; margin: auto;" /&gt;
+]
+
+???
+
+The SingleCellExperiment class is designed to accommodate all the information produced along a typical single-cell analysis workflow.
+
+Those data include raw data:
+
+- raw assay data
+- experimental metadata
+Processed data:
+- quality control metrics
+- normalized data
+- dimensionality reduction results
+Downstream analyses:
+- cluster labels
+- differential expression results
+- downstream cell and feature annotations
+
+---
+
+# `iSEE` ❤️ SingleCellExperiment
+
+&lt;p align="center"&gt;
+&lt;img src="images/OSCA-figure-4.png" alt="" height = 500/&gt;
+&lt;/p&gt;
+
+???
+
+Here we demonstrate how iSEE dissects SCE objects to produce figures.
+
+---
+
+# The `iSEE` interface
+
+&lt;p align="center"&gt;
+&lt;img src="images/iSEE_screenshot.png" alt="" height = 600/&gt;
+&lt;/p&gt;
+
+???
+
+iSEE provides a powerful yet flexible user interface that includes 8 predefined panel types.
+That said, it also gives the freedom to define any number custom panel types, both plots and tables.
+
+---
+
+# &lt;i class="fas fa-exclamation-triangle"&gt;&lt;/i&gt; Reinventing the wheel?
+
+&lt;i class="fab fa-github"&gt;&lt;/i&gt; [`https://github.com/federicomarini/awesome-expression-browser`](https://github.com/federicomarini/awesome-expression-browser)
+
+&lt;!-- approximately &gt;100 entries! and counting--&gt;
+
+--
+
+&lt;p align="center"&gt;
+&lt;img src="images/batman-robin.png" alt="" height = 400/&gt;
+&lt;/p&gt;
+
+--
+
+&lt;i class="fas fa-medal"&gt;&lt;/i&gt; [`https://blog.rstudio.com/2019/04/05/first-shiny-contest-winners/`](https://blog.rstudio.com/2019/04/05/first-shiny-contest-winners/)
+
+???
+
+Don't try this at home.
+
+The wealth of information produced by single-cell analysis workflows has motivated the development of many interactive applications to help researchers explore their data sets.
+Each of those applications has its own strengths and limitations.
+It is very tempting to develop new applications to with their own strengths and limitations.
+Before you decide to do so, we encourage you to test iSEE.
+You may find that it already does everything you would like!
+
+iSEE won the RStudio Shiny Contest in April 2019 with mention for "Most technically impressive".
+
+In particular:
+
+- There were 136 submissions from 122 unique app developers!
+
+---
+
+# &lt;i class="fas fa-globe-americas"&gt;&lt;/i&gt; The `iSEE`-verse
+
+* [`https://bioconductor.org/packages/iSEE/`](https://bioconductor.org/packages/iSEE/)
+
+* [`https://bioconductor.org/packages/iSEEu/`](https://bioconductor.org/packages/iSEEu/)
+
+---
+
+# &lt;i class="fas fa-globe-americas"&gt;&lt;/i&gt; The `iSEE`-verse
+
+* [`https://bioconductor.org/packages/iSEE/`](https://bioconductor.org/packages/iSEE/)
+
+* [`https://bioconductor.org/packages/iSEEu/`](https://bioconductor.org/packages/iSEEu/)
+
+* &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE`](https://github.com/iSEE) organization
+  + &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE/iSEE`](https://github.com/iSEE/iSEE) source code
+  + &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE/iSEE2018`](https://github.com/iSEE/iSEE2018) manuscript
+  + &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE/iSEE-book`](https://github.com/iSEE/iSEE-book) repository for the book about extending `iSEE`
+  + &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE/iSEEu`](https://github.com/iSEE/iSEEu) source code for `iSEEu`, containing additional panels and modes for `iSEE`
+  + &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE/iSEE_custom`](https://github.com/iSEE/iSEE_custom) example of custom panels
+  + &lt;i class="fab fa-github"&gt;&lt;/i&gt; [`iSEE/iSEE_instances`](https://github.com/iSEE/iSEE_instances) gallery of complete analyses on public data
+
+
+???
+
+The growing funtionality of the iSEE package is demonstrated in various places:
+
+- The Bioconductor website is the primary source of information for the latest release and development package versions.
+- The package GitHub repository is the place to monitor the latest developments, open issues, and contribute pull requests (consider the Bioconductor support website for general questions)
+- kevinrue/iSEE_custom demonstrates the development of custom panels through a gallery of examples
+- federicomarini/iSEE_instances demonstrates the integration of iSEE with entire analyses of publicly available datasets through a gallery of examples
+- Finally, the iSEE workshop was written for the Bioconductor conference 2019 to showcase the functionality of the iSEE package for both newcomers and experienced R users.
+
+---
+
+## &lt;i class="fas fa-hand-spock"&gt;&lt;/i&gt; &lt;i class="fas fa-hand-spock"&gt;&lt;/i&gt; &lt;i class="fas fa-laptop"&gt;&lt;/i&gt; Hands-on, with iSEE!
+
+.pull-left[
+&lt;p align="center"&gt;
+&lt;img src="images/iSEEmeme.jpg" alt="" height = 500/&gt;
+&lt;/p&gt;
+]
+
+.pull-right[
+- [`iSEE/iSEEdemo`](https://github.com/iSEE/iSEEdemo) - a compact summary workshop
+- [`iSEE/iSEEWorkshop2020`](https://github.com/iSEE/iSEEWorkshop2020) - a fully fledged workshop, expected to contain all information to reproduce the setup &amp; analysis
+- [`iSEE/iSEEWorkshopEuroBioc2020`](https://isee.github.io/iSEEWorkshopEuroBioc2020/) - some focused "recipes"
+]
+
+---
+
+# &lt;i class="fas fa-microphone"&gt;&lt;/i&gt; Voice recognition
+
+.center[`iSEE(sce, voice=TRUE)`]
+
+&lt;div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;"&gt;
+  &lt;iframe src="https://www.youtube.com/embed/0crFZLwAJOE?autoplay=0" style="position: absolute; top: 0; left: 0; width: 100%; height: 90%; border:0;" allowfullscreen title="YouTube Video"&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+
+???
+
+iSEE can be extended using third-party JavaScript libraries.
+Here we demonstrate how speech recognition was integrated to support a number of predefined vocal commands.
+
+---
+
+# &lt;i class="fas fa-bug"&gt;&lt;/i&gt; Sorry, our software is full of bugs
+
+.center[`iSEE(sce, bugs=TRUE)`]
+
+&lt;img src="images/iSEE-bug.gif" width="90%" style="display: block; margin: auto;" /&gt;
+
+???
+
+iSEE can be extended using third-party JavaScript libraries.
+Here we demonstrate how speech recognition was integrated to support a number of predefined vocal commands.
+
+---
+
+# Resources
+
+- Orchestrating single-cell analysis with Bioconductor ([`https://www.nature.com/articles/s41592-019-0654-x`](https://www.nature.com/articles/s41592-019-0654-x)) + [`https://osca.bioconductor.org/`](https://osca.bioconductor.org/)
+
+- A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor: [`https://f1000research.com/articles/5-2122`](https://f1000research.com/articles/5-2122)
+
+- Current best practices in single-cell RNA-seq analysis: [`https://www.embopress.org/doi/pdf/10.15252/msb.20188746`](https://www.embopress.org/doi/pdf/10.15252/msb.20188746)
+
+- Seurat's website; Scanpy's website
+
+
+---
+
+class: middle, center
+
+## ... thank you for your attention!
+&lt;code&gt;marinif@uni-mainz.de - &lt;svg viewBox="0 0 512 512" style="height:1em;position:relative;display:inline-block;top:.1em;" xmlns="http://www.w3.org/2000/svg"&gt;  &lt;path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/code&gt; [`@FedeBioinfo`](https://twitter.com/FedeBioinfo)
+
+
+---
+
+&lt;!-- empty slide --&gt;
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="https://platform.twitter.com/widgets.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
