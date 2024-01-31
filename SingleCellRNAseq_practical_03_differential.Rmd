@@ -1,0 +1,68 @@
+---
+title: >
+  Single-cell RNA-seq Data Analysis - Your Data Report - Differential analyses
+subtitle: >
+  Bioinformatics Workshop - IMBEI, University Medical Center Mainz</br>
+  Instructors: Najla Abassi, Annekathrin Nedwed, Alicia Schulze, 
+  Federico Marini</br>
+  <small>Material adapted from the GTIPI single cell sessions (developed by Federico Marini & Charlotte Soneson)</small></br>
+  <a href="https://imbeimainz.github.io/GTIPI2022"><img src="images/gtipi_logo.png" alt="" height="100"/></a>
+author:
+- name: This could be you!
+- name: <a href="https://federicomarini.github.io">Federico Marini (marinif@uni-mainz.de)</a><br><a href="https://www.unimedizin-mainz.de/imbei/">IMBEI, University Medical Center Mainz</a><br><a href="https://twitter.com/FedeBioinfo">`@FedeBioinfo`</a>
+date: "2024/02/01-02"
+output: 
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    code_folding: show
+    code_download: true
+editor_options: 
+  chunk_output_type: inline
+bibliography: references.bib
+---
+
+```{r setup, include = FALSE}
+suppressPackageStartupMessages({
+  library(BiocStyle)
+  library(knitr)
+  library(rmarkdown)
+})
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#",
+  error = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 6, 
+  fig.height = 6, 
+  eval = TRUE
+)
+
+options(width = 80)
+```
+
+# Where were we?
+
+
+
+# Setting up the differential analyses
+
+
+
+
+# Towards data interpretation
+
+
+
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
+
+# References {-}
+
