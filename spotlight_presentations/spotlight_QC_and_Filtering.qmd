@@ -1,0 +1,270 @@
+---
+title: "Quality Control (QC) and filtering approaches"
+author: "Workshop on the analysis of scRNA-sequencing data"
+format: 
+  revealjs: 
+    fontsize: 20pt
+    slide-number: TRUE
+    scrollable: TRUE
+    theme: default
+    width: 1280
+    length: 800
+    fig-cap-location: top
+    logo: "images/Universitaetsmedizin-eps-converted-to.png"
+    footer: "Workshop on the analysis of scRNA-sequencing data"
+editor: visual
+date: "2024-02-01" 
+---
+
+```{r echo = F}
+.Last <- function() {          # Beep when knitting ends
+  beepr::beep(1)
+  Sys.sleep(1)
+}
+
+options(error = function(){    # scream on error
+  beepr::beep(9)
+  Sys.sleep(1)
+  }
+)
+```
+
+## Overview
+
+-   Motivation for Quality Control in scRNA-seq analyses
+-   Quality Control Measures / Metrics
+-   Setting Quality Control Thresholds
+-   Filtering strategies for removing low-quality cells and libraries
+-   Detecting Doublets
+
+## Motivation for Quality Control in scRNA-seq analyses
+
+Cells of low quality and doublets can lead to misleading results.
+
+Low quality cells can:
+
+-   form distinctive clusters, impacting result interpretation
+-   interference with population heterogeneity characterization during analysis (PCA, variance estimation)
+-   presence of falsely 'up-regulated' genes due to aggressive scaling.
+
+Low quality cells usually arise from:
+
+-   Cell damage during dissociation
+-   Failures in library preparation
+-   poor cell viability
+-   failures during cell capture
+
+## Motivation for Quality Control in scRNA-seq analyses
+
+Manifestations of low-quality libraries include cells with:
+
+-   Low total counts (library size)
+-   Few expressed genes
+-   High proportions of genes mapping to the mitochondrial genome
+-   High spike in proportions
+
+There is also the problem of sparsity in the data:
+
+-   Due to drop out events there are many zeros in the data. → Hard to interpret/distinguish a 'biological' zero from a 'technical' one
+
+::: {.callout-tip icon="false"}
+### 
+
+→ In order to address all these issues above, we want to filter low quality cells form the data.
+:::
+
+## Quality Control Metrics
+
+There are usually four commonly used quality control metrics:
+
+**The library size**:
+
+-   The total sum of counts across all relevant features (i.e. genes) for each cell. In cells with small library sizes, RNA has been lost during the steps in the library preparation, e.g. due to cell lysis or inefficient cDNA capture and amplification.
+
+**The number of expressed features (i.e. genes)**:
+
+-   The number of genes in a cell with non-zero counts. Any cell with very few expressed genes is likely to be of poor quality as the diverse transcript population has not been successfully captured.
+
+**The proportion of reads mapping to genes in the mitochondrial genome**:
+
+-   High proportions are indicative of poor-quality cells, presumably because of loss of cytoplasmic RNA from perforated cells.
+
+## Quality Control Metrics
+
+**The proportion of reads mapped to spike-in transcripts**:
+
+-   Calculated relative to the total count across all features (including spike-ins) for each cell. Each cell should have the same amount of spike-in RNA added, so any enrichment indicates a loss of endogenous RNA. Thus, high proportions are indicative of poor-quality cells where endogenous RNA has been lost due to, e.g., partial cell lysis or RNA degradation during dissociation.
+
+## Quality Control Thresholds
+
+There are usually different approaches to filter low quality cells:
+
+-   Fixed thresholds
+-   Adaptive thresholds
+-   Other approaches
+
+## Fixed Quality Control Thresholds
+
+As the name suggests, we use a fixed threshold to identify low quality cells:
+
+-   straight forward and simple
+-   easy to interpret
+-   easy to replicate in different analyses
+
+Users could e.g. decide to filter cells with
+
+-   a library size \< 100,000
+-   the number of expressed genes \< 5,000
+-   Spike-in proportions \> 10%
+-   Mitochondrial proportions \> 10%
+
+## Fixed Quality Control Thresholds
+
+However, although this is an easy to use approach, there are some disadvantages:
+
+-   experience in the respective protocol needed
+-   experience with the biological system needed
+-   risk of biased filtering
+-   failure to address sample-specific characteristics
+
+Also the same fixed thresholds used for read count-based data cannot be used for UMI --based data and vice versa.
+
+→ potentially not possible to use the same thresholds for each of your analyses
+
+The workflow of the `Seurat` package uses a fixed threshold based quality control.
+
+## Adaptive Quality Control Thresholds
+
+Adaptive thresholds usually use the median absolute deviation (MAD) from the median value of each metric across all cells.
+
+The MAD is defined as: $$
+ 𝑀𝐴𝐷= \frac{1}{n} \sum_{i=1}^{n}|𝑥_𝑖  − \overline{x}|
+$$
+
+with n = number of datapoints and $\overline{x}$ = median of all datapoints.
+
+Usually a cell which deviates more than 3 MAD from the median in an unfavorable direction for any of the quality control metrics is considered an outlier.
+
+## Adaptive Quality Control Thresholds
+
+This approach is based on the assumption that most cells of a data set are of high quality.
+
+Adaptive thresholds are usually the favored option because they can adapt to sample-specific properties such as sequencing depth, cDNA capturing efficiency, mitochondrial content, etc.
+
+An example for a function with an adaptive threshold is the `perCellQCFilters()` function from the `scuttle` package.
+
+## Other approaches
+
+-   One could also quantify the 'outlyingness' of each cell based on their individual QC metrics using packages such as `robustbase`.
+
+-   There is also the possibility to do PCA-based outlier detection or to use support-vector machines to distinguish low from high quality cells.
+
+-   Lastly, outliers can also be detected based on their gene-expression profile rather than QC metrics.
+
+→ However, we would advise to characterize low quality cells either based on adaptive or fixed thresholds.
+
+## Quality Control Metrics
+
+Before filtering the identified low quality cells, one should inspect plots of the different quality control metrics:
+
+-   This step can help ensure that there are no problems, e.g. such as contradictory QC metrics, filtering of specific sub-populations, filtering of large amounts of cells and so on.
+
+-   Especially interesting could be to plot two QC metrics against each other, usually involving the mitochondrial content. The goal here is to ensure that cells with large mitochondrial content do not have a sufficient/large library size. Cells with a large library size and high mitochondrial content are likely to be highly metabolic active (e.g. hepatocytes) and it would be detrimental for the interpretation to filter these cells.
+
+## Quality Control Thresholds
+
+::: {layout-ncol="3"}
+![Mitochondrial content](images/iLN-discard-1.png)
+
+![Library size](images/iLN-discard-2.png)
+
+![Number of detected genes](images/iLN-discard-3.png)
+:::
+
+------------------------------------------------------------------------
+
+::: {layout-ncol="2"}
+![Mitochondrial content against Library size](images/iLN-discard-4.png)
+
+![Library size against the Number of detected genes](images/iLN-discard-5.png)
+:::
+
+------------------------------------------------------------------------
+
+## Filtering
+
+Once we have identified potentially low quality cells, we have two options:
+
+-   Filter the low quality cells to ensure that they do not interfere with downstream analyses and hinder the interpretation of the data.
+
+-   Mark the low quality cells and do not filter them yet. This allows to keep them for downstream analyses and to observe if these cells form distinctive clusters. This could be beneficial in cases where there are cell types which have overall bad QC metrics.
+
+::: {.callout-tip icon="false"}
+### 
+
+Usually we advise to not filter low quality cells in data analyses which are of **explorative** nature, but filter in those cases in which data interpretation especially based on clustering results is desired.
+:::
+
+## Doublet Detection
+
+Doublets are artificial libraries that arise from errors during cell capturing and sorting (especially in droplet-based protocols)
+
+Doublets can:
+
+-   appear as intermediate of transitionary states
+-   mislead cell type annotation
+-   lead to a lot of biological noise in the data
+
+Although there are several different strategies to infer doublets, the general approach is based on expression profiles.
+
+## Doublet Detection
+
+There are two commonly used approaches based on expression profiles:
+
+**Infer doublets based on cluster information:**
+
+-   identify clusters whose expression profile lies „between" two other clusters
+-   identify differentially expressed genes for each cluster
+-   compute how many unique differentially expressed genes each cluster has the clusters with the least unique genes are potentially consiting of doublets
+
+**Infer doublets based on simulated cells:**
+
+-   simulate thousands of potential doublets by combining the expression profiles of two random cells
+-   compute the amount of simulated doublets and "real" cells in the neighborhood of each cell → The ratio of these two is the *„doublet score"* for each cell.
+
+## Doublet Detection
+
+Independent of the process of doublet detection, simple filtering of doublets is usually not powerful enough to remove all real doublets from the data.
+
+→ We advise you to always overlay the computed doublet scores over clustering results to evaluate whether the doublets form distinctive clusters.
+
+-   Afterwards you should decide for each project and sample individually if doublets should be filtered or simply marked.
+
+::: {.callout-tip icon="false"}
+### 
+
+It can also be beneficial to consult further information on the experimental procedure to have a better idea on how many doublets to expect (e.g. 10X states in its protocol that a doublet frequency of 5% per sample can be expected)
+:::
+
+## Doublet detection
+
+::: columns
+::: {.column width="\"50%"}
+![UMAP colored by detected doublets](images/UMAP_by_doublets-2.png){fig-align="center"}
+:::
+
+::: {.column width="\"50%"}
+![UMAP colored by cluster](images/UMAP_by_cluster-2.png){fig-align="center"}
+:::
+:::
+
+# Thank you for your attention!
+
+Any questions?
+
+## References
+
+-   Amezquita RA, Lun ATL, Becht E, Carey VJ, Carpp LN, Geistlinger L, et al.. Orchestrating single-cell analysis with Bioconductor. Nat Methods (2020) 17:137--45. doi: 10.1038/s41592-019-0654-x
+-   Hao and Hao et al. Integrated analysis of multimodal single-cell data. Cell (2021) \[Seurat V4\]
+-   McCarthy DJ, Campbell KR, Lun ATL, Willis QF (2017). "Scater: pre-processing, quality control, normalisation and visualisation of single-cell RNA-seq data in R." *Bioinformatics*, *33*, 1179-1186. doi:10.1093/bioinformatics/btw777 https://doi.org/10.1093/bioinformatics/btw777
+-   Maechler M, Rousseeuw P, Croux C, Todorov V, Ruckstuhl A, Salibian-Barrera M, Verbeke T, Koller M, Conceicao EL, Anna di Palma M (2023). robustbase: Basic Robust Statistics. R package version 0.99-0, http://robustbase.r-forge.r-project.org/.
