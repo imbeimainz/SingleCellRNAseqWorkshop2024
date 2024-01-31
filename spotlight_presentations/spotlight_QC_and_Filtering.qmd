@@ -15,6 +15,7 @@ format:
 date: "2024-02-01" 
 ---
 
+
 ```{r echo = F}
 .Last <- function() {          # Beep when knitting ends
   beepr::beep(1)
