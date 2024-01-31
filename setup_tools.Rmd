@@ -1,0 +1,35 @@
+# Setup tools and packages for this workshop!
+
+Run this chunk in R/RStudio to install the required packages:
+
+```{r}
+# install BiocManager
+install.packages("BiocManager")
+
+# install Bioconductor - recent release: 3.18
+BiocManager::install()
+
+# install the required packages
+BiocManager::install(
+  c("knitr",
+    "rmarkdown",
+    "ggplot2",
+    "DESeq2",
+    "edgeR",
+    "pcaExplorer",
+    "ideal",
+    "pheatmap",
+    "iSEE",
+    "iSEEu",
+    "GeneTonic",
+    "clusterProfiler",
+    "SingleCellExperiment",
+    "TENxPBMCData",
+    "scater",
+    "scran",
+    "celldex",
+    "SingleR")
+)
+```
+
+If this returns no errors, you should be all set!
