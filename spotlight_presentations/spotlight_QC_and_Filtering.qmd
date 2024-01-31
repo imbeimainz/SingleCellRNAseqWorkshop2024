@@ -12,7 +12,6 @@ format:
     fig-cap-location: top
     logo: "images/Universitaetsmedizin-eps-converted-to.png"
     footer: "Workshop on the analysis of scRNA-sequencing data"
-editor: visualdsfsdf
 date: "2024-02-01" 
 ---
 
