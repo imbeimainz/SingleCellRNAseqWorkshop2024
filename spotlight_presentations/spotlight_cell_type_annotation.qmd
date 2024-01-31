@@ -1,0 +1,29 @@
+---
+title: "Cell type annotation"
+author: "Workshop on the analysis of scRNA-sequencing data"
+format: 
+  revealjs: 
+    fontsize: 20pt
+    slide-number: TRUE
+    scrollable: TRUE
+    theme: default
+    width: 1280
+    length: 800
+    fig-cap-location: top
+    logo: "images/Universitaetsmedizin-eps-converted-to.png"
+    footer: "Workshop on the analysis of scRNA-sequencing data"
+date: "2024-02-01" 
+---
+
+```{r echo = F}
+.Last <- function() {          # Beep when knitting ends
+  beepr::beep(1)
+  Sys.sleep(1)
+}
+
+options(error = function(){    # scream on error
+  beepr::beep(9)
+  Sys.sleep(1)
+  }
+)
+```
