@@ -27,3 +27,37 @@ options(error = function(){    # scream on error
   }
 )
 ```
+
+
+## Motivation
+
+Cell type annotation is one of the more complex steps of a single-cell RNA-seq analysis.
+
+However, it is commonly done to support and ease data interpretations.
+
+## Types of Cell type annotation
+
+There are usually two common approaches to cell type annotation:
+
++ Using a reference data set
++ Using sets of known marker genes for specific cell types
+
+However, both approaches can be flawed and are only as good as the respective reference data used.
+
+## Which one is the correct annotation of the data?
+
+
+
+
+## Which one is the correct annotation of the data? #2
+
+
+
+
+## Conclusions
+
+
++ Cell type annotation can greatly support and facilitate data interpretation.
++ However you should be careful to not view the cell type annotation as a ‘ground truth’
++ In order to really be able to interpret cell type annotation you need to be aware of the cell type composition of your sample and maybe evaluate the results of different reference data sets.
+
