@@ -12,7 +12,7 @@ format:
     fig-cap-location: top
     logo: "images/Universitaetsmedizin-eps-converted-to.png"
     footer: "Workshop on the analysis of scRNA-sequencing data"
-date: "2024-02-01" 
+date: "2024-02-02" 
 ---
 
 ```{r echo = F}
@@ -44,15 +44,23 @@ There are usually two common approaches to cell type annotation:
 
 However, both approaches can be flawed and are only as good as the respective reference data used.
 
+
+```{r, echo=FALSE}
+# data used consists of stem cells
+```
+
+
 ## Which one is the correct annotation of the data?
 
+::: {layout-ncol="2"}
 
 
-
-## Which one is the correct annotation of the data? #2
-
+![](images/TSNE_many.png)
 
 
+![](images/TSNE_tCells.png)
+
+:::
 
 ## Conclusions
 
