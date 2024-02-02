@@ -20,6 +20,10 @@ This is the repository for the Workshop on single-cell RNA-seq data analysis, or
 
 TODO
 
+Feedback form:
+
+https://forms.gle/z6ssFmuLW56uTPYt6
+
 **License**
 
 [CC BY-SA 4.0](LICENSE.md)
