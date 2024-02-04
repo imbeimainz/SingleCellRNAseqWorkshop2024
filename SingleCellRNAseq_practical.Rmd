@@ -1516,6 +1516,7 @@ https://github.com/iSEE/iSEE_instances/
 
 It can be also used as a powerful portal to *tell a story* about your data, like we did in http://shiny.imbei.uni-mainz.de:3838/covid_IT
 
+A very good collection of material is linked in the material included in the `iSEEdemo` pckage - see https://isee.github.io/iSEEdemo/articles/iSEEdemo.html
 
 # Some other topics worth mentioning
 
