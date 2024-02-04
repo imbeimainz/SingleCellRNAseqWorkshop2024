@@ -144,6 +144,8 @@ sce_immu_r2 <- read_BDrhapsody(
   sample_id = "immu_r2", cond_id = "immu", batch_id = "batch1"
 )
 
+sce_ctrl_r1
+
 sce_ctrl_r1$condition
 sce_ctrl_r1$sample_id
 sce_ctrl_r1$batch_id
@@ -1439,6 +1441,9 @@ func_res_de2 <- func_res
 
 Similar snippets as the one presented above can be used to export these results as well into a spreadsheet.
 
+```{r}
+writexl::write_xlsx(func_res, path = "my_exported_funcres.xlsx")
+```
 
 
 ## Marker genes - "another form" of differential expression
