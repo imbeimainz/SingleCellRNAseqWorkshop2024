@@ -3,9 +3,9 @@ title: >
   Single-cell RNA-seq Data Analysis - hands-on session
 subtitle: >
   Bioinformatics Workshop - IMBEI, University Medical Center Mainz</br>
+  Instructors: Najla Abassi, Annekathrin Nedwed, Alicia Schulze, 
   Federico Marini</br>
   <small>Material adapted from the GTIPI single cell sessions (developed by Federico Marini & Charlotte Soneson)</small></br>
-  Instructors: Najla Abassi, Annekathrin Nedwed, Alicia Schulze, 
   <a href="https://imbeimainz.github.io/GTIPI2022"><img src="images/gtipi_logo.png" alt="" height="100"/></a>
 author:
 - name: <a href="https://federicomarini.github.io">Federico Marini (marinif@uni-mainz.de)</a><br><a href="https://www.unimedizin-mainz.de/imbei/">IMBEI, University Medical Center Mainz</a><br><a href="https://twitter.com/FedeBioinfo">`@FedeBioinfo`</a>
