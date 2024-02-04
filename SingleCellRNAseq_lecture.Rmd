@@ -776,7 +776,7 @@ In particular:
 
 ???
 
-The growing funtionality of the iSEE package is demonstrated in various places:
+The growing functionality of the iSEE package is demonstrated in various places:
 
 - The Bioconductor website is the primary source of information for the latest release and development package versions.
 - The package GitHub repository is the place to monitor the latest developments, open issues, and contribute pull requests (consider the Bioconductor support website for general questions)
