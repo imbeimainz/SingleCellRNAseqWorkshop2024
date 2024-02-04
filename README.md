@@ -17,8 +17,8 @@ This is the repository for the Workshop on single-cell RNA-seq data analysis, or
 - Get your hands dirty!
 
 **Schedule**
-<style>
 
+<style>
 details {
   border: 1px solid #aaa;
   border-radius: 4px;
